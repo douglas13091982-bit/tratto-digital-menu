@@ -57,6 +57,7 @@ function MenuView() {
   const [addrNeighborhood, setAddrNeighborhood] = useState('')
   const [addrCity, setAddrCity] = useState('')
   const [customerNumber, setCustomerNumber] = useState('')
+  const [addrComplement, setAddrComplement] = useState('')
   const [cep, setCep] = useState('')
   const [cepStatus, setCepStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [cepMessage, setCepMessage] = useState('')
@@ -400,7 +401,7 @@ function MenuView() {
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim(),
       customerAddress: deliveryType === 'delivery'
-        ? `${customerAddress.trim()}, nº ${customerNumber.trim()}${cep.length === 9 ? ' - CEP ' + cep : ''}`
+        ? `${addrStreet.trim()}, nº ${customerNumber.trim()}${addrComplement.trim() ? ', ' + addrComplement.trim() : ''}${addrNeighborhood.trim() ? ', ' + addrNeighborhood.trim() : ''}${addrCity.trim() ? ', ' + addrCity.trim() : ''}${cep.length === 9 ? ' - CEP ' + cep : ''}`
         : '',
       deliveryType,
       scheduledDate: scheduling ? schedDate : undefined,
@@ -433,6 +434,7 @@ function MenuView() {
     setAddrNeighborhood('')
     setAddrCity('')
     setCustomerNumber('')
+    setAddrComplement('')
     setCep('')
     setCepStatus('idle')
     setCepMessage('')
@@ -1344,19 +1346,40 @@ function MenuView() {
                       cursor: locked.city ? 'not-allowed' : 'text'
                     }}
                   />
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
-                    Número e complemento *
-                  </label>
-                  <input
-                    ref={numberInputRef}
-                    value={customerNumber}
-                    onChange={e => setCustomerNumber(e.target.value)}
-                    placeholder="Ex.: 123, apto 4"
-                    style={{
-                      width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '10px',
-                      border: '1px solid #e5e7eb', fontSize: '14px', marginBottom: '8px', outline: 'none'
-                    }}
-                  />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(90px, 0.7fr) minmax(0, 1.5fr)', gap: '10px', marginBottom: '8px' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                        Número *
+                      </label>
+                      <input
+                        ref={numberInputRef}
+                        value={customerNumber}
+                        onChange={e => setCustomerNumber(e.target.value)}
+                        inputMode="numeric"
+                        autoComplete="address-line2"
+                        placeholder="Ex.: 123"
+                        style={{
+                          width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '10px',
+                          border: '1px solid #e5e7eb', fontSize: '14px', outline: 'none'
+                        }}
+                      />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                        Complemento
+                      </label>
+                      <input
+                        value={addrComplement}
+                        onChange={e => setAddrComplement(e.target.value)}
+                        autoComplete="address-line3"
+                        placeholder="Apto, bloco, casa..."
+                        style={{
+                          width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '10px',
+                          border: '1px solid #e5e7eb', fontSize: '14px', outline: 'none'
+                        }}
+                      />
+                    </div>
+                  </div>
                   {useDistanceFreight && freight.status !== 'idle' && (
                     <p style={{
                       fontSize: '13px', fontWeight: 600, margin: '0 0 8px 0',
@@ -1537,7 +1560,7 @@ function MenuView() {
                   <div style={{ border: '1px solid #e5e7eb', borderRadius: '14px', padding: '14px', marginBottom: '12px' }}>
                     <p style={{ margin: '0 0 6px', fontSize: '13px', fontWeight: 800, color: '#374151' }}>Recebimento</p>
                     <p style={{ margin: 0, fontSize: '13px', color: '#4b5563' }}>{deliveryType === 'delivery' ? 'Entrega no endereço' : 'Retirada no local'}</p>
-                    {deliveryType === 'delivery' && <p style={{ margin: '4px 0 0', fontSize: '13px', lineHeight: 1.5, color: '#4b5563' }}>{customerAddress}, nº {customerNumber}{cep.length === 9 ? ' • CEP ' + cep : ''}</p>}
+                    {deliveryType === 'delivery' && <p style={{ margin: '4px 0 0', fontSize: '13px', lineHeight: 1.5, color: '#4b5563' }}>{addrStreet}, nº {customerNumber}{addrComplement.trim() ? ', ' + addrComplement.trim() : ''}{addrNeighborhood.trim() ? ', ' + addrNeighborhood.trim() : ''}{addrCity.trim() ? ', ' + addrCity.trim() : ''}{cep.length === 9 ? ' • CEP ' + cep : ''}</p>}
                     {deliveryType === 'pickup' && <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#4b5563' }}>{config.address || 'Endereço da loja'}</p>}
                     {scheduling && <p style={{ margin: '6px 0 0', fontSize: '13px', fontWeight: 700, color: '#92400e' }}>🗓️ Agendado: {formatScheduled(schedDate, schedTime)}</p>}
                   </div>
