@@ -38,6 +38,7 @@ function MenuView() {
   const accentSoft = tint(accent, 0.1) // fundo de opção selecionada
   const accentShadow = tint(accent, 0.3) // sombra dos botões principais
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id || '')
+  const [productSearch, setProductSearch] = useState('')
   const [cart, setCart] = useState<CartItem[]>([])
   const [showCart, setShowCart] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -467,7 +468,9 @@ function MenuView() {
   const modalItemTotal = (selectedProduct?.price || 0) + selectedAddOnsTotal
 
   const availableProducts = products.filter(p => p.available)
+  const normalizedSearch = productSearch.trim().toLocaleLowerCase('pt-BR')
   const sortedCategories = [...categories].sort((a, b) => a.order - b.order)
+  const visibleCategories = sortedCategories.filter(category => availableProducts.some(product => product.categoryId === category.id && (!normalizedSearch || product.name.toLocaleLowerCase('pt-BR').includes(normalizedSearch) || (product.description || '').toLocaleLowerCase('pt-BR').includes(normalizedSearch))))
 
   return (
     <div style={{
@@ -705,8 +708,26 @@ function MenuView() {
         </div>
       </div>
 
+      {/* Busca de produtos */}
+      <div style={{ maxWidth: '896px', margin: '16px auto 0', padding: isMobile ? '0 12px' : '0 16px' }}>
+        <div style={{ position: 'relative' }}>
+          <span aria-hidden="true" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '18px', color: '#6b7280' }}>⌕</span>
+          <input
+            type="search"
+            value={productSearch}
+            onChange={e => setProductSearch(e.target.value)}
+            placeholder="Buscar produto..."
+            aria-label="Buscar produto no cardápio"
+            style={{ width: '100%', boxSizing: 'border-box', padding: '13px 42px 13px 42px', borderRadius: '12px', border: '1px solid #d1d5db', backgroundColor: '#ffffff', color: '#111827', fontSize: '15px', outline: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
+          />
+          {productSearch && (
+            <button type="button" onClick={() => setProductSearch('')} aria-label="Limpar busca" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', color: '#6b7280', fontSize: '20px', cursor: 'pointer', padding: '4px 8px' }}>×</button>
+          )}
+        </div>
+      </div>
+
       {/* Category Navigation - Mobile Optimized */}
-      <div style={{
+      {!normalizedSearch && <div style={{
         position: 'sticky',
         top: 0,
         zIndex: 20,
@@ -754,7 +775,7 @@ function MenuView() {
             ))}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Menu Content */}
       <div style={{ 
@@ -762,8 +783,8 @@ function MenuView() {
         margin: '0 auto', 
         padding: isMobile ? '16px 12px 100px' : '24px 16px 100px'
       }}>
-        {sortedCategories.map(category => {
-          const categoryProducts = availableProducts.filter(p => p.categoryId === category.id)
+        {visibleCategories.map(category => {
+          const categoryProducts = availableProducts.filter(p => p.categoryId === category.id && (!normalizedSearch || p.name.toLocaleLowerCase('pt-BR').includes(normalizedSearch) || (p.description || '').toLocaleLowerCase('pt-BR').includes(normalizedSearch)))
           if (categoryProducts.length === 0) return null
           return (
             <section
@@ -815,6 +836,12 @@ function MenuView() {
             </section>
           )
         })}
+
+        {normalizedSearch && visibleCategories.length === 0 && (
+          <p role="status" style={{ textAlign: 'center', padding: '28px 12px', color: config.menuDescription || '#6b7280', fontSize: '14px' }}>
+            Nenhum produto encontrado para “{productSearch.trim()}”.
+          </p>
+        )}
 
         {/* Delivery Zones Info */}
         {fixedEnabled && deliveryZones.length > 0 && (
