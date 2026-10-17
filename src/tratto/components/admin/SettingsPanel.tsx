@@ -1,5 +1,5 @@
 // @ts-nocheck -- código original migrado sem alterações de lógica
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PasswordInput from '../PasswordInput'
 import { errorPt } from '@/lib/errors-pt'
 import { CheckCircle2, Store, Clock3, Truck, Eye, ShieldCheck, AlertTriangle, MapPin, Phone, Tag, Volume2, Play, Music, Printer } from 'lucide-react'
@@ -23,8 +23,13 @@ const TABS = [
 ]
 
 function SettingsPanel() {
-  const { config, setConfig } = useStore()
+  const { config, setConfig, dataReady } = useStore()
   const [formData, setFormData] = useState(config)
+
+  // Só hidrata o formulário depois que o StoreProvider concluir a leitura do Supabase.
+  useEffect(() => {
+    if (dataReady) setFormData(config)
+  }, [dataReady, config])
   const [saved, setSaved] = useState(false)
   const [tab, setTab] = useState('aparencia')
   const [saving, setSaving] = useState(false)
@@ -116,6 +121,7 @@ function SettingsPanel() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!dataReady || saving) return
     setSaved(false)
     setSaveFailed(false)
     setSaving(true)
@@ -124,7 +130,8 @@ function SettingsPanel() {
     try {
       pwaIcon = (await buildStoreIcon(512, { logoUrl: formData.logoUrl, accent: formData.menuButton || '#d9273f', name: formData.name })) || formData.pwaIcon
     } catch { /* o ícone é um extra: nunca impede de salvar */ }
-    const ok = await setConfig({ ...formData, pwaIcon, weeklyHours: getWeeklyHours(formData) })
+    // Mantém propriedades que já existam na configuração atual e não estejam no formulário.
+    const ok = await setConfig({ ...config, ...formData, pwaIcon, weeklyHours: getWeeklyHours(formData) })
     setSaving(false)
     if (ok) {
       setSaved(true)
@@ -210,6 +217,7 @@ function SettingsPanel() {
         ))}
       </div>
 
+      {!dataReady && <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Carregando as configurações da loja… O salvamento ficará disponível quando a leitura terminar.</p>}
       <form onSubmit={handleSubmit} className={`space-y-6 ${FORM_TABS.includes(tab) ? '' : 'hidden'}`}>
         <div className={tab === 'aparencia' ? 'space-y-6' : 'hidden'}>
 {/* Personalização visual do cardápio */}
@@ -674,7 +682,7 @@ function SettingsPanel() {
 
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || !dataReady}
           className={`w-full text-white py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-70 ${saved ? 'bg-green-600 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}
         >
           {saving ? 'Salvando…' : saved ? '✓ Salvo!' : 'Salvar Configurações'}
