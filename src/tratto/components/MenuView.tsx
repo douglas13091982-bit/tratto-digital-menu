@@ -108,14 +108,16 @@ function MenuView() {
   const [schedDate, setSchedDate] = useState('')
   const [schedTime, setSchedTime] = useState('')
   const scheduling = mustSchedule || (schedulingEnabled && whenMode === 'schedule')
+  // Mostra todas as datas disponíveis para explicar quais produtos não aceitam a data escolhida.
   const scheduleDays = (schedulingEnabled || productScheduleRequired) && showCheckout
-    ? getScheduleSlots(config).filter(day => {
-        const weekday = new Date(day.date + 'T12:00:00Z').getUTCDay()
-        return constrainedProducts.every(product => product.deliveryDays!.includes(weekday))
-      })
+    ? getScheduleSlots(config)
     : []
   const selectedDay = scheduleDays.find(d => d.date === schedDate)
-  const scheduleOk = !scheduling || !!(selectedDay && selectedDay.times.includes(schedTime))
+  const selectedWeekday = selectedDay ? new Date(selectedDay.date + 'T12:00:00Z').getUTCDay() : null
+  const incompatibleProducts = selectedWeekday === null
+    ? []
+    : constrainedProducts.filter(product => !product.deliveryDays!.includes(selectedWeekday))
+  const scheduleOk = !scheduling || !!(selectedDay && selectedDay.times.includes(schedTime) && incompatibleProducts.length === 0)
 
   // Cor do banner = cor de fundo do logo enviado (o logo se funde ao banner)
   const [logoBg, setLogoBg] = useState<string | null>(null)
@@ -1410,19 +1412,7 @@ function MenuView() {
                       ))}
                     </div>
                   )}
-                  {scheduling && (hasConflictingDeliveryDays ? (
-                    <div style={{ fontSize: '12px', color: '#991b1b', backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '12px', borderRadius: '10px', margin: 0 }}>
-                      <p style={{ fontWeight: 700, margin: '0 0 6px' }}>Não é possível agendar todos os produtos para a mesma data.</p>
-                      <p style={{ margin: '0 0 8px' }}>Estes produtos têm dias de entrega diferentes. Retire do carrinho os produtos que não combinam com a data desejada ou faça pedidos separados.</p>
-                      <ul style={{ margin: 0, paddingLeft: '18px' }}>
-                        {constrainedProducts.map(product => (
-                          <li key={product.id} style={{ marginTop: '5px' }}>
-                            <strong>{product.name}</strong>: entrega somente {formatProductDeliveryDays(product)}.
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : scheduleDays.length === 0 ? (
+                  {scheduling && (scheduleDays.length === 0 ? (
                     <p style={{ fontSize: '12px', color: '#dc2626', margin: 0 }}>Não há horários disponíveis nos dias permitidos para este carrinho.</p>
                   ) : (
                     <>
@@ -1452,7 +1442,19 @@ function MenuView() {
                           </div>
                         </>
                       )}
-                      {!scheduleOk && <p style={{ fontSize: '12px', color: config.menuDescription || '#6b7280', margin: '8px 0 0' }}>Escolha o dia e o horário.</p>}
+                      {selectedDay && incompatibleProducts.length > 0 && (
+                        <div role="alert" style={{ fontSize: '12px', color: '#991b1b', backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '12px', borderRadius: '10px', margin: '10px 0 0' }}>
+                          <p style={{ fontWeight: 700, margin: '0 0 6px' }}>A data escolhida não atende a todos os produtos.</p>
+                          <p style={{ margin: '0 0 6px' }}>Estes produtos não podem ser entregues em {weekdayNames[selectedWeekday!]}:</p>
+                          <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                            {incompatibleProducts.map(product => (
+                              <li key={product.id}><strong>{product.name}</strong> — disponível: {formatProductDeliveryDays(product)}.</li>
+                            ))}
+                          </ul>
+                          <p style={{ margin: '8px 0 0' }}>Escolha outra data ou retire esses produtos do carrinho.</p>
+                        </div>
+                      )}
+                      {!scheduleOk && incompatibleProducts.length === 0 && <p style={{ fontSize: '12px', color: config.menuDescription || '#6b7280', margin: '8px 0 0' }}>Escolha o dia e o horário.</p>}
                     </>
                   ))}
                 </div>
