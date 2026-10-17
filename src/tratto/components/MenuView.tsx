@@ -1448,6 +1448,9 @@ function MenuView() {
                               </li>
                             ))}
                           </ul>
+                          <p style={{ margin: '10px 0 0', paddingTop: '8px', borderTop: '1px solid #fecaca', fontSize: '12px', fontWeight: 600, lineHeight: 1.4 }}>
+                            Retire este produto do carrinho ou escolha outra data!
+                          </p>
                         </div>
                       )}
                       {!scheduleOk && incompatibleProducts.length === 0 && <p style={{ fontSize: '12px', color: config.menuDescription || '#6b7280', margin: '8px 0 0' }}>Escolha o dia e o horário.</p>}
