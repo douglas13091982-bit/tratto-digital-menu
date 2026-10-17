@@ -95,6 +95,9 @@ function MenuView() {
   const constrainedProducts = cart
     .map(item => item.product)
     .filter(product => Array.isArray(product.deliveryDays) && product.deliveryDays.length > 0)
+  const weekdayNames = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado']
+  const formatProductDeliveryDays = (product: Product) =>
+    (product.deliveryDays || []).map(day => weekdayNames[day]).filter(Boolean).join(', ')
   const productScheduleRequired = constrainedProducts.length > 0
   const hasConflictingDeliveryDays = constrainedProducts.length > 1 &&
     !Array.from({ length: 7 }, (_, day) => day).some(day =>
@@ -1408,9 +1411,17 @@ function MenuView() {
                     </div>
                   )}
                   {scheduling && (hasConflictingDeliveryDays ? (
-                    <p style={{ fontSize: '12px', color: '#dc2626', backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '10px 12px', borderRadius: '10px', margin: 0 }}>
-                      Os produtos do carrinho não têm dias de entrega em comum. Faça pedidos separados para escolher datas compatíveis.
-                    </p>
+                    <div style={{ fontSize: '12px', color: '#991b1b', backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '12px', borderRadius: '10px', margin: 0 }}>
+                      <p style={{ fontWeight: 700, margin: '0 0 6px' }}>Não é possível agendar todos os produtos para a mesma data.</p>
+                      <p style={{ margin: '0 0 8px' }}>Estes produtos têm dias de entrega diferentes. Retire do carrinho os produtos que não combinam com a data desejada ou faça pedidos separados.</p>
+                      <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                        {constrainedProducts.map(product => (
+                          <li key={product.id} style={{ marginTop: '5px' }}>
+                            <strong>{product.name}</strong>: entrega somente {formatProductDeliveryDays(product)}.
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ) : scheduleDays.length === 0 ? (
                     <p style={{ fontSize: '12px', color: '#dc2626', margin: 0 }}>Não há horários disponíveis nos dias permitidos para este carrinho.</p>
                   ) : (
