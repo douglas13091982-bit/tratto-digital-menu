@@ -1439,15 +1439,15 @@ function MenuView() {
                         </>
                       )}
                       {selectedDay && incompatibleProducts.length > 0 && (
-                        <div role="alert" style={{ fontSize: '12px', color: '#991b1b', backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '12px', borderRadius: '10px', margin: '10px 0 0' }}>
-                          <p style={{ fontWeight: 700, margin: '0 0 6px' }}>A data escolhida não atende a todos os produtos.</p>
-                          <p style={{ margin: '0 0 6px' }}>Estes produtos não podem ser entregues em {weekdayNames[selectedWeekday!]}:</p>
-                          <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                        <div role="alert" style={{ color: '#991b1b', backgroundColor: '#fef2f2', border: '1px solid #fecaca', padding: '10px 12px', borderRadius: '10px', margin: '10px 0 0' }}>
+                          <ul style={{ margin: 0, paddingLeft: '18px', display: 'grid', gap: '6px' }}>
                             {incompatibleProducts.map(product => (
-                              <li key={product.id}><strong>{product.name}</strong> — disponível: {formatProductDeliveryDays(product)}.</li>
+                              <li key={product.id} style={{ lineHeight: 1.4 }}>
+                                <strong>{product.name}</strong>
+                                <span style={{ display: 'block', marginTop: '2px', fontSize: '11px', color: '#7f1d1d' }}>Disponível: {formatProductDeliveryDays(product)}</span>
+                              </li>
                             ))}
                           </ul>
-                          <p style={{ margin: '8px 0 0' }}>Escolha outra data ou retire esses produtos do carrinho.</p>
                         </div>
                       )}
                       {!scheduleOk && incompatibleProducts.length === 0 && <p style={{ fontSize: '12px', color: config.menuDescription || '#6b7280', margin: '8px 0 0' }}>Escolha o dia e o horário.</p>}
