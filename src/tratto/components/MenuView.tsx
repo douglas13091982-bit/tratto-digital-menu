@@ -99,10 +99,6 @@ function MenuView() {
   const formatProductDeliveryDays = (product: Product) =>
     (product.deliveryDays || []).map(day => weekdayNames[day]).filter(Boolean).join(', ')
   const productScheduleRequired = constrainedProducts.length > 0
-  const hasConflictingDeliveryDays = constrainedProducts.length > 1 &&
-    !Array.from({ length: 7 }, (_, day) => day).some(day =>
-      constrainedProducts.every(product => product.deliveryDays!.includes(day))
-    )
   const mustSchedule = (schedulingEnabled && !storeStatus.open) || productScheduleRequired
   const [whenMode, setWhenMode] = useState<'now' | 'schedule'>('now')
   const [schedDate, setSchedDate] = useState('')
